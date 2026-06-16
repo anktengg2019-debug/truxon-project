@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Truxon · Live Truck Tracking</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand"><span class="logo">●</span> Truxon</div>
+        <p class="subtitle">Real-time GPS fleet tracking</p>
+        <div class="nav-links">
+          <a href="/driver.html">→ Open driver mode</a>
+        </div>
+
+        <div id="status" class="status" data-kind="info">Starting…</div>
+
+        <div class="metric">Active drivers: <strong id="driver-count">0</strong></div>
+        <ul id="driver-list" class="driver-list">
+          <li class="empty">No active drivers yet.</li>
+        </ul>
+      </aside>
+      <main><div id="map"></div></main>
+    </div>
+    <script type="module" src="/src/dashboard.js"></script>
+  </body>
+</html>

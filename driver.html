@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Truxon · Driver Mode</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand"><span class="logo">●</span> Truxon Driver</div>
+        <p class="subtitle">Broadcast your live location every 5s</p>
+        <div class="nav-links">
+          <a href="/index.html">→ Open dashboard</a>
+        </div>
+
+        <form id="driver-form">
+          <label for="driver-id">Driver / Truck ID</label>
+          <input id="driver-id" type="text" placeholder="truck-01" autocomplete="off" />
+
+          <label for="driver-name">Display name</label>
+          <input id="driver-name" type="text" placeholder="Ankit's Truck" autocomplete="off" />
+
+          <div class="radio-row">
+            <label><input type="radio" name="mode" value="gps" /> Real GPS</label>
+            <label><input type="radio" name="mode" value="simulate" checked /> Simulate</label>
+          </div>
+
+          <button id="start-btn" class="btn" type="submit">Start broadcasting</button>
+          <button id="stop-btn" class="btn secondary" type="button" disabled>Stop</button>
+        </form>
+
+        <div id="status" class="status" data-kind="info">Idle.</div>
+        <div id="coords" class="coords">—</div>
+      </aside>
+      <main><div id="map"></div></main>
+    </div>
+    <script type="module" src="/src/driver.js"></script>
+  </body>
+</html>
