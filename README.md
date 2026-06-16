@@ -97,19 +97,34 @@ npm run build
 npm run preview
 ```
 
-## Suggested Firestore security rules
+## Firestore security rules (role-based)
 
-For a quick start (open read, drivers can write their own doc — tighten with Auth in
-production):
+The production rules live in [`firestore.rules`](./firestore.rules) and gate `drivers`
+access on a per-user **profile document** at `users/{uid}`:
 
+- `signedIn()` — `request.auth != null`
+- `isOps()` — signed in **and** `users/{uid}` exists (uses `exists()`, so a missing doc or
+  missing `role` field returns `false` instead of crashing the rule)
+- `isAdmin()` — signed in and `users/{uid}.role == 'admin'`
+- `users/{uid}` — each user can self-create/read/update their own profile (the bootstrap
+  that lets `isOps()`/`isAdmin()` evaluate); admins can read any profile
+- `drivers/{driverId}` — read/write allowed for `isOps()` users
+
+The app provisions the profile automatically: on first sign-in `src/firebase.js` calls
+`ensureUserProfile()`, which creates `users/{uid} = { role: "user", createdAt }` if it
+doesn't exist (and backfills `role` if missing) **before** any driver read/write.
+
+Deploy the rules (Firebase CLI):
+
+```bash
+firebase deploy --only firestore:rules
 ```
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /drivers/{driverId} {
-      allow read: if true;
-      allow write: if true; // TODO: restrict with Firebase Auth
-    }
-  }
-}
-```
+
+…or paste `firestore.rules` into the console (Firestore Database → Rules → Publish).
+
+> **Prerequisite:** a sign-in method must be enabled, otherwise there is no `uid` to create
+> `users/{uid}` and every request is `permission-denied`. Enable **Authentication →
+> Sign-in method → Anonymous** (simplest) or another provider.
+>
+> For a quick local test without auth you can temporarily publish fully-open rules
+> (`allow read, write: if true;` on `drivers/{driverId}`) — do **not** ship these.

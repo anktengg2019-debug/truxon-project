@@ -1,0 +1,40 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // True for any signed-in user who has a profile document. Uses exists() so the
+    // rule never crashes when the doc (or role field) is missing — it just returns false.
+    function isOps() {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function isAdmin() {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Each user owns their own profile doc. This bootstrap rule lets a freshly
+    // signed-in client self-create users/{uid} (with a default role) so that
+    // isOps()/isAdmin() can subsequently evaluate. Admins can read any profile.
+    match /users/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow create, update: if signedIn() && request.auth.uid == uid;
+      allow delete: if isAdmin();
+    }
+
+    // Live driver positions: any provisioned (ops) user can read the fleet and
+    // write positions. Tighten to `request.auth.uid == driverId` if each driver
+    // should only write their own doc.
+    match /drivers/{driverId} {
+      allow read: if isOps();
+      allow write: if isOps();
+    }
+  }
+}

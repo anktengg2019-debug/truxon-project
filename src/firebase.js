@@ -3,6 +3,7 @@ import {
   getFirestore,
   collection,
   doc,
+  getDoc,
   setDoc,
   onSnapshot,
   serverTimestamp,
@@ -30,12 +31,46 @@ export const isFirebaseConfigured = Boolean(
 );
 
 const DRIVERS_COLLECTION = 'drivers';
+const USERS_COLLECTION = 'users';
+const DEFAULT_ROLE = 'user';
 
 let db = null;
 let auth = null;
 // Resolves once we know the auth state (signed in, or sign-in attempted and failed).
 // Firestore calls await this so writes/reads carry an auth token when rules require it.
 let authReady = Promise.resolve();
+// Resolves after authReady AND the signed-in user's profile doc has been ensured.
+// Role-based rules read users/{uid}.role, so the profile must exist before driver ops.
+let ready = Promise.resolve();
+
+/**
+ * Ensure a profile document exists for the signed-in user so role-based rules
+ * (which read users/{uid}.role) have a document to evaluate. Self-creates with a
+ * default role on first sign-in. Best-effort: never throws.
+ */
+async function ensureUserProfile(user) {
+  if (!user) return;
+  try {
+    const ref = doc(collection(db, USERS_COLLECTION), user.uid);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) {
+      await setDoc(
+        ref,
+        { role: DEFAULT_ROLE, createdAt: serverTimestamp() },
+        { merge: true },
+      );
+    } else if (snap.data().role == null) {
+      // Profile exists but is missing the role field rules depend on.
+      await setDoc(ref, { role: DEFAULT_ROLE }, { merge: true });
+    }
+  } catch (err) {
+    console.warn(
+      '[firebase] Could not ensure user profile (' +
+        (err?.code ?? 'error') +
+        '). Driver ops may be denied until users/{uid}.role exists.',
+    );
+  }
+}
 
 if (isFirebaseConfigured) {
   const app = initializeApp(firebaseConfig);
@@ -72,6 +107,9 @@ if (isFirebaseConfigured) {
       resolve(null);
     });
   });
+
+  // After auth, ensure the user's profile (role) doc exists so role-based rules pass.
+  ready = authReady.then(ensureUserProfile);
 }
 
 /**
@@ -80,7 +118,7 @@ if (isFirebaseConfigured) {
  */
 export async function publishDriverPosition(driver) {
   if (!db) throw new Error('Firebase is not configured');
-  await authReady;
+  await ready;
   const ref = doc(collection(db, DRIVERS_COLLECTION), driver.id);
   await setDoc(
     ref,
@@ -107,7 +145,7 @@ export function subscribeToDrivers(onChange, onError) {
   if (!db) throw new Error('Firebase is not configured');
   let unsub = () => {};
   let cancelled = false;
-  authReady.then(() => {
+  ready.then(() => {
     if (cancelled) return;
     const ref = collection(db, DRIVERS_COLLECTION);
     unsub = onSnapshot(

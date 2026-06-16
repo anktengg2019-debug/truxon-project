@@ -5,6 +5,8 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously } from 'firebase/auth';
 import { getFirestore, doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 
+let uid = null;
+
 const env = Object.fromEntries(
   readFileSync(new URL('../.env', import.meta.url), 'utf8')
     .split('\n')
@@ -25,12 +27,24 @@ const app = initializeApp({
 const auth = getAuth(app);
 try {
   const cred = await signInAnonymously(auth);
-  console.log('AUTH OK uid=', cred.user.uid);
+  uid = cred.user.uid;
+  console.log('AUTH OK uid=', uid);
 } catch (e) {
   console.log('AUTH FAILED', e.code);
 }
 
 const db = getFirestore(app);
+
+// Mirror ensureUserProfile(): role-based rules need users/{uid} before driver ops.
+if (uid) {
+  try {
+    await setDoc(doc(db, 'users', uid), { role: 'user', createdAt: serverTimestamp() }, { merge: true });
+    console.log('PROFILE OK users/' + uid);
+  } catch (e) {
+    console.log('PROFILE ERROR', e.code, e.message);
+  }
+}
+
 const ref = doc(db, 'drivers', '_healthcheck');
 try {
   await setDoc(ref, { name: '_healthcheck', lat: 0, lng: 0, updatedAt: serverTimestamp() }, { merge: true });
