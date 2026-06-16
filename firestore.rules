@@ -25,7 +25,14 @@ service cloud.firestore {
     // isOps()/isAdmin() can subsequently evaluate. Admins can read any profile.
     match /users/{uid} {
       allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
-      allow create, update: if signedIn() && request.auth.uid == uid;
+      // Clients may only create their profile with the default role and may never
+      // self-escalate it (role must stay the same, or be backfilled from missing to
+      // 'user'). Elevating to 'admin' is done out-of-band (console / Admin SDK).
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.role == 'user';
+      allow update: if signedIn() && request.auth.uid == uid
+        && (request.resource.data.role == resource.data.role
+            || (resource.data.role == null && request.resource.data.role == 'user'));
       allow delete: if isAdmin();
     }
 
