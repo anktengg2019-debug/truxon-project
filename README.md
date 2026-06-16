@@ -69,6 +69,14 @@ drivers/{driverId} = {
    best-effort: if it's disabled the app still works against fully-open (`if true`) rules,
    but auth-gated rules will return `permission-denied` until you enable it.
 
+   **Phone Auth (OTP), optional.** The sidebar has a **"Sign in with phone"** button that
+   opens an OTP login modal (`src/loginModal.js` + `src/phoneAuth.js`). To use it, enable
+   Build → Authentication → Sign-in method → **Phone**, and (for local testing) add a test
+   phone number under that provider. The `RecaptchaVerifier` is **duplicate-safe**: a single
+   invisible verifier instance is reused and fully torn down (`verifier.clear()` + DOM reset)
+   before any re-render, so reopening the modal or pressing **Resend** never triggers the
+   `reCAPTCHA has already been rendered in this element` error.
+
 5. **App Check (optional).** If you turn on App Check enforcement for Cloud Firestore,
    all client requests need a valid App Check token. Register the web app in the console
    (App Check → Apps), create a reCAPTCHA v3 site key, and set `VITE_FIREBASE_APPCHECK_SITE_KEY`
