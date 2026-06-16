@@ -63,6 +63,22 @@ drivers/{driverId} = {
    Create database). For local testing you can start in test mode; for production use
    the rules below.
 
+4. **Authentication.** The app signs in anonymously so Firestore writes/reads carry an
+   auth token (required by the production rules below). Enable it in the Firebase console:
+   Build → Authentication → Sign-in method → **Anonymous** → Enable. Anonymous sign-in is
+   best-effort: if it's disabled the app still works against fully-open (`if true`) rules,
+   but auth-gated rules will return `permission-denied` until you enable it.
+
+5. **App Check (optional).** If you turn on App Check enforcement for Cloud Firestore,
+   all client requests need a valid App Check token. Register the web app in the console
+   (App Check → Apps), create a reCAPTCHA v3 site key, and set `VITE_FIREBASE_APPCHECK_SITE_KEY`
+   in `.env`. Leave it empty if App Check is not enforced.
+
+   > Troubleshooting `permission-denied`: it means the request reached Firestore and was
+   > rejected by the server, not an app bug. Check, in order: (a) App Check enforcement is
+   > off OR a site key is configured, (b) the rules below are published on the **(default)**
+   > database, (c) Anonymous Authentication is enabled.
+
 ## Run
 
 ```bash
