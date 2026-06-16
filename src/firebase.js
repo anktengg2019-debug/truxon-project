@@ -90,6 +90,8 @@ if (isFirebaseConfigured) {
 
   db = getFirestore(app);
   auth = getAuth(app);
+  // Use the device language for reCAPTCHA / SMS templates (phone auth).
+  auth.useDeviceLanguage();
 
   authReady = new Promise((resolve) => {
     onAuthStateChanged(auth, (user) => {
@@ -110,6 +112,20 @@ if (isFirebaseConfigured) {
 
   // After auth, ensure the user's profile (role) doc exists so role-based rules pass.
   ready = authReady.then(ensureUserProfile);
+}
+
+/** @returns {import('firebase/auth').Auth | null} the initialized Auth instance, or null if Firebase isn't configured. */
+export function getAuthInstance() {
+  return auth;
+}
+
+/**
+ * Ensure the given (or current) user has a profile doc with a role, so role-based
+ * rules pass. Exposed for sign-in flows (e.g. phone auth) that change the user
+ * after the initial anonymous bootstrap.
+ */
+export async function ensureProfileForUser(user) {
+  await ensureUserProfile(user ?? auth?.currentUser ?? null);
 }
 
 /**

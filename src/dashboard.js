@@ -1,6 +1,9 @@
 import { TruckMap } from './truckMap.js';
 import { subscribeToDrivers, isFirebaseConfigured } from './firebase.js';
 import { SimulatedTruck, DEMO_ROUTE } from './simulation.js';
+import { mountLoginModal } from './loginModal.js';
+
+if (isFirebaseConfigured) mountLoginModal();
 
 const statusEl = document.getElementById('status');
 const listEl = document.getElementById('driver-list');

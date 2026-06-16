@@ -1,6 +1,9 @@
 import { publishDriverPosition, isFirebaseConfigured } from './firebase.js';
 import { TruckMap } from './truckMap.js';
 import { SimulatedTruck, DEMO_ROUTE, bearing } from './simulation.js';
+import { mountLoginModal } from './loginModal.js';
+
+if (isFirebaseConfigured) mountLoginModal();
 
 const PUBLISH_INTERVAL_MS = 5000;
 
