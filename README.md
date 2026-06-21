@@ -1,104 +1,121 @@
 # Truxon — Real-time GPS Truck Tracking
 
-Real-time driver/truck tracking built with **Leaflet** maps and **Firebase Firestore**.
-Drivers broadcast their live coordinates every 5 seconds and a dashboard shows the
-trucks moving on the map in real time.
+Real-time driver/truck tracking built with **Leaflet** maps and **Firebase Firestore**,
+behind a production auth system (Google, Email OTP, Email + Password).
 
 ## Features
 
+- **Authentication** (`/login.html`, `/signup.html`):
+  - **Continue with Google** (one-click)
+  - **Email OTP** — a 6-digit code emailed to the user (server-generated, hashed at rest,
+    5-minute expiry, max 3 attempts, rate-limited)
+  - **Email + Password** — with forgot-password / reset email and email verification
+  - Session persistence (auto-login), logout, and route protection on every page
 - **Driver mode** (`/driver.html`): publishes live position to Firestore every 5 seconds,
-  using either the browser's real GPS (`navigator.geolocation`) or a built-in route
-  simulation (handy for demos / desktops without GPS).
-- **Dashboard** (`/index.html`): subscribes to Firestore with `onSnapshot` and renders
-  every truck as a heading-aware marker. Markers **animate smoothly** between updates
-  instead of jumping, and stale trucks (no update for 30s) fade out.
-- **Demo/offline mode**: if Firebase isn't configured (or `?demo=1` is passed to the
-  dashboard), fake trucks are simulated locally so the UI still works.
+  using either the browser's real GPS (`navigator.geolocation`) or a route simulation.
+- **Dashboard** (`/index.html`): subscribes with `onSnapshot` and renders each truck as a
+  heading-aware marker that animates smoothly between updates; stale trucks fade out.
+
+## Auth methods
+
+| Method | Where | Notes |
+| --- | --- | --- |
+| Google | client (`signInWithPopup`) | enable Google provider in Firebase console |
+| Email + Password | client | enable Email/Password provider; sends verification + reset emails |
+| Email OTP (6-digit) | serverless (`api/auth/*`) | needs Admin SDK + SMTP (see deployment) |
+
+There is **no** anonymous auth, **no** phone auth, **no** reCAPTCHA, and no
+`appVerificationDisabledForTesting`.
 
 ## Data model
 
-Firestore collection `drivers`, one document per driver (doc id = driver/truck id):
-
 ```
+users/{uid} = {
+  uid, name, email, phone,
+  role,              // customer | transporter | vendor | driver | admin
+  createdAt, lastLogin,
+  isVerified,        // email verified
+  profileCompleted   // name + phone present
+}
+
 drivers/{driverId} = {
-  name:      string,
-  lat:       number,
-  lng:       number,
-  heading:   number,   // degrees, 0 = north
-  speed:     number,   // km/h
-  status:    string,   // "active"
-  updatedAt: serverTimestamp
+  name, lat, lng, heading, speed, status, updatedAt
+}
+
+emailOtps/{hash(email)} = {   // server-only (Admin SDK); clients are denied
+  email, hash, salt, expiresAt, attempts, sendCount, windowStart, lastSentAt, createdAt
 }
 ```
 
-## Setup
+## Roles
 
-1. Install dependencies:
+`customer`, `transporter`, `vendor`, `driver`, `admin`. Signup may self-assign any role
+**except `admin`** (admin is granted out-of-band via the Admin SDK / console). Only
+`transporter | vendor | driver | admin` may write `drivers` positions; any signed-in user
+with a profile may read the fleet.
 
-   ```bash
-   npm install
-   ```
-
-2. Configure Firebase. Copy `.env.example` to `.env` and fill in your web app config
-   (Firebase console → Project settings → Your apps → SDK setup and configuration):
-
-   ```bash
-   cp .env.example .env
-   ```
-
-   ```
-   VITE_FIREBASE_API_KEY=...
-   VITE_FIREBASE_AUTH_DOMAIN=...
-   VITE_FIREBASE_PROJECT_ID=...
-   VITE_FIREBASE_STORAGE_BUCKET=...
-   VITE_FIREBASE_MESSAGING_SENDER_ID=...
-   VITE_FIREBASE_APP_ID=...
-   VITE_FIREBASE_DATABASE_URL=...
-   ```
-
-   > Firebase web config values are not secrets (they ship in the client bundle),
-   > but `.env` is git-ignored to keep project-specific values out of the repo.
-
-3. Enable **Cloud Firestore** in the Firebase console (Build → Firestore Database →
-   Create database). For local testing you can start in test mode; for production use
-   the rules below.
-
-4. **Authentication.** The app signs in anonymously so Firestore writes/reads carry an
-   auth token (required by the production rules below). Enable it in the Firebase console:
-   Build → Authentication → Sign-in method → **Anonymous** → Enable. Anonymous sign-in is
-   best-effort: if it's disabled the app still works against fully-open (`if true`) rules,
-   but auth-gated rules will return `permission-denied` until you enable it.
-
-   **Phone Auth (OTP), optional.** The sidebar has a **"Sign in with phone"** button that
-   opens an OTP login modal (`src/loginModal.js` + `src/phoneAuth.js`). To use it, enable
-   Build → Authentication → Sign-in method → **Phone**, and (for local testing) add a test
-   phone number under that provider. The `RecaptchaVerifier` is **duplicate-safe**: a single
-   invisible verifier instance is reused and fully torn down (`verifier.clear()` + DOM reset)
-   before any re-render, so reopening the modal or pressing **Resend** never triggers the
-   `reCAPTCHA has already been rendered in this element` error.
-
-5. **App Check (optional).** If you turn on App Check enforcement for Cloud Firestore,
-   all client requests need a valid App Check token. Register the web app in the console
-   (App Check → Apps), create a reCAPTCHA v3 site key, and set `VITE_FIREBASE_APPCHECK_SITE_KEY`
-   in `.env`. Leave it empty if App Check is not enforced.
-
-   > Troubleshooting `permission-denied`: it means the request reached Firestore and was
-   > rejected by the server, not an app bug. Check, in order: (a) App Check enforcement is
-   > off OR a site key is configured, (b) the rules below are published on the **(default)**
-   > database, (c) Anonymous Authentication is enabled.
-
-## Run
+## Setup (local)
 
 ```bash
-npm run dev       # dev server at http://localhost:5173
+npm install
+cp .env.example .env   # fill in VITE_FIREBASE_* (client) values
+npm run dev            # http://localhost:5173
 ```
 
-- Open `http://localhost:5173/` for the dashboard.
-- Open `http://localhost:5173/driver.html` for driver mode (enter an ID, pick GPS or
-  Simulate, then Start broadcasting).
-- Open `http://localhost:5173/?demo=1` to force the offline simulation.
+In the Firebase console:
 
-Build for production:
+1. **Firestore** — Build → Firestore Database → Create database (default).
+2. **Auth providers** — Build → Authentication → Sign-in method → enable **Google** and
+   **Email/Password**.
+3. **Rules** — publish [`firestore.rules`](./firestore.rules) (see below).
+
+Pages:
+- `/login.html` — sign in (Google / Email OTP / Email + Password)
+- `/signup.html` — create an account (name, email, phone, password, role)
+- `/index.html` — dashboard (protected)
+- `/driver.html` — driver broadcast (protected)
+
+## Email OTP backend (serverless)
+
+The 6-digit Email OTP requires a small backend (cannot be done safely client-side). It runs
+as **Vercel serverless functions** under [`api/auth/`](./api/auth):
+
+- `POST /api/auth/request-otp { email }` — generates a code, stores **only its salted SHA-256
+  hash** with a 5-minute expiry, rate-limits (1/min, 5/hour), and emails the code.
+- `POST /api/auth/verify-otp { email, code }` — checks expiry + attempt count (max 3),
+  provisions/looks up the Firebase user, ensures the `users/{uid}` profile, and returns a
+  **custom token** the client exchanges via `signInWithCustomToken`.
+
+Required server env vars (Vercel → Project → Settings → Environment Variables, and a local
+`.env` for `vercel dev`):
+
+| Var | Purpose |
+| --- | --- |
+| `FIREBASE_SERVICE_ACCOUNT` | Admin SDK credentials (service account JSON, raw or base64). Firebase console → Project settings → Service accounts → Generate new private key. |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` / `SMTP_FROM` | SMTP for sending the code (Gmail app password, SendGrid, Mailgun, SES, …). |
+
+> Custom-token sign-in (Email OTP) requires the Firebase project to be on the **Blaze** plan
+> only if you also use other paid features; custom tokens themselves work on Spark. SMTP is
+> any provider you choose.
+
+## Deployment steps
+
+1. Push to GitHub; import the repo into **Vercel** (framework auto-detected as Vite).
+2. Set **client** env vars on Vercel: all `VITE_FIREBASE_*` (so the deployed bundle talks to
+   Firebase — `.env` is git-ignored and not deployed).
+3. Set **server** env vars on Vercel: `FIREBASE_SERVICE_ACCOUNT` + the `SMTP_*` set.
+4. In Firebase console: enable **Google** and **Email/Password** providers; add the Vercel
+   domain under Authentication → Settings → **Authorized domains**.
+5. Deploy `firestore.rules`:
+   ```bash
+   firebase deploy --only firestore:rules
+   ```
+   …or paste [`firestore.rules`](./firestore.rules) into Firestore Database → Rules → Publish
+   on the **(default)** database.
+6. Verify: visit `/login.html`, sign in with Google, confirm you land on the dashboard and a
+   `users/{uid}` doc was created.
+
+## Build
 
 ```bash
 npm run build
@@ -107,32 +124,13 @@ npm run preview
 
 ## Firestore security rules (role-based)
 
-The production rules live in [`firestore.rules`](./firestore.rules) and gate `drivers`
-access on a per-user **profile document** at `users/{uid}`:
+Defined in [`firestore.rules`](./firestore.rules):
 
 - `signedIn()` — `request.auth != null`
-- `isOps()` — signed in **and** `users/{uid}` exists (uses `exists()`, so a missing doc or
-  missing `role` field returns `false` instead of crashing the rule)
-- `isAdmin()` — signed in and `users/{uid}.role == 'admin'`
-- `users/{uid}` — each user can self-create/read/update their own profile (the bootstrap
-  that lets `isOps()`/`isAdmin()` evaluate); admins can read any profile
-- `drivers/{driverId}` — read/write allowed for `isOps()` users
-
-The app provisions the profile automatically: on first sign-in `src/firebase.js` calls
-`ensureUserProfile()`, which creates `users/{uid} = { role: "user", createdAt }` if it
-doesn't exist (and backfills `role` if missing) **before** any driver read/write.
-
-Deploy the rules (Firebase CLI):
-
-```bash
-firebase deploy --only firestore:rules
-```
-
-…or paste `firestore.rules` into the console (Firestore Database → Rules → Publish).
-
-> **Prerequisite:** a sign-in method must be enabled, otherwise there is no `uid` to create
-> `users/{uid}` and every request is `permission-denied`. Enable **Authentication →
-> Sign-in method → Anonymous** (simplest) or another provider.
->
-> For a quick local test without auth you can temporarily publish fully-open rules
-> (`allow read, write: if true;` on `drivers/{driverId}`) — do **not** ship these.
+- `isOps()` — signed in **and** `users/{uid}` exists (`exists()` keeps the rule from crashing
+  when the doc/role is missing — it returns `false`)
+- `hasRole([...])` / `isAdmin()` — role-gated checks reading `users/{uid}.role`
+- `users/{uid}` — owner self-creates with a **non-admin** role and can never change their own
+  role; admins can read any profile
+- `drivers/{driverId}` — read for any `isOps()` user; write for `transporter/vendor/driver/admin`
+- `emailOtps/{id}` — `allow read, write: if false` (only the Admin SDK touches it)

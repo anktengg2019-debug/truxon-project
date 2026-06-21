@@ -1,9 +1,8 @@
 import { publishDriverPosition, isFirebaseConfigured } from './firebase.js';
 import { TruckMap } from './truckMap.js';
 import { SimulatedTruck, DEMO_ROUTE, bearing } from './simulation.js';
-import { mountLoginModal } from './loginModal.js';
-
-if (isFirebaseConfigured) mountLoginModal();
+import { requireUser } from './auth.js';
+import { mountUserBar } from './userBar.js';
 
 const PUBLISH_INTERVAL_MS = 5000;
 
@@ -136,6 +135,14 @@ form.addEventListener('submit', (e) => {
 });
 stopBtn.addEventListener('click', stop);
 
-if (!isFirebaseConfigured) {
-  setStatus('Firebase not configured — positions will not be saved to Firestore.', 'warn');
+async function init() {
+  if (!isFirebaseConfigured) {
+    setStatus('Firebase not configured — positions will not be saved to Firestore.', 'warn');
+    return;
+  }
+  // Protected route: redirects to /login.html if not signed in.
+  const user = await requireUser();
+  await mountUserBar(user);
 }
+
+init();

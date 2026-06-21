@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><circle cx='8' cy='8' r='7' fill='%231f6feb'/></svg>" />
+    <title>Truxon · Create account</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body class="auth-body">
+    <main class="auth-card">
+      <div class="brand"><span class="logo">●</span> Truxon</div>
+      <h1 class="auth-title">Create account</h1>
+
+      <button id="google-btn" class="btn google-btn" type="button">
+        <span class="g-icon">G</span> Continue with Google
+      </button>
+
+      <div class="auth-divider"><span>or</span></div>
+
+      <form id="signup-form" class="auth-panel">
+        <label for="su-name">Full name</label>
+        <input id="su-name" type="text" autocomplete="name" placeholder="Ankit Chauhan" required />
+
+        <label for="su-email">Email</label>
+        <input id="su-email" type="email" autocomplete="email" placeholder="you@example.com" required />
+
+        <label for="su-phone">Phone</label>
+        <input id="su-phone" type="tel" autocomplete="tel" placeholder="+91 98765 43210" required />
+
+        <label for="su-password">Password</label>
+        <input id="su-password" type="password" autocomplete="new-password" placeholder="At least 6 characters" required />
+
+        <label for="su-role">Role</label>
+        <select id="su-role" required>
+          <option value="customer">Customer</option>
+          <option value="transporter">Transporter</option>
+          <option value="vendor">Vendor</option>
+          <option value="driver">Driver</option>
+        </select>
+
+        <button id="su-submit" class="btn" type="submit">Create account</button>
+      </form>
+
+      <div id="auth-status" class="login-status" role="status" aria-live="polite"></div>
+
+      <p class="auth-foot">Already have an account? <a href="/login.html">Sign in</a></p>
+    </main>
+    <script type="module" src="/src/signup.js"></script>
+  </body>
+</html>

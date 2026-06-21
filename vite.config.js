@@ -9,10 +9,12 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, 'index.html'),
         driver: resolve(__dirname, 'driver.html'),
+        login: resolve(__dirname, 'login.html'),
+        signup: resolve(__dirname, 'signup.html'),
       },
       output: {
         manualChunks: {
-          firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/app-check'],
+          firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore'],
           leaflet: ['leaflet'],
         },
       },

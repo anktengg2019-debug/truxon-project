@@ -1,9 +1,8 @@
 import { TruckMap } from './truckMap.js';
 import { subscribeToDrivers, isFirebaseConfigured } from './firebase.js';
 import { SimulatedTruck, DEMO_ROUTE } from './simulation.js';
-import { mountLoginModal } from './loginModal.js';
-
-if (isFirebaseConfigured) mountLoginModal();
+import { requireUser } from './auth.js';
+import { mountUserBar } from './userBar.js';
 
 const statusEl = document.getElementById('status');
 const listEl = document.getElementById('driver-list');
@@ -72,11 +71,15 @@ function startDemoMode(reason) {
   }, 5000);
 }
 
-const params = new URLSearchParams(location.search);
-if (params.get('demo') === '1') {
-  startDemoMode('Demo mode forced via ?demo=1.');
-} else if (isFirebaseConfigured) {
+async function init() {
+  if (!isFirebaseConfigured) {
+    startDemoMode('Firebase is not configured (.env missing).');
+    return;
+  }
+  // Protected route: redirects to /login.html if not signed in.
+  const user = await requireUser();
+  await mountUserBar(user);
   startLiveMode();
-} else {
-  startDemoMode('Firebase is not configured (.env missing).');
 }
+
+init();
