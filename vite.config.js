@@ -11,6 +11,7 @@ export default defineConfig({
         driver: resolve(__dirname, 'driver.html'),
         login: resolve(__dirname, 'login.html'),
         signup: resolve(__dirname, 'signup.html'),
+        booking: resolve(__dirname, 'booking.html'),
       },
       output: {
         manualChunks: {

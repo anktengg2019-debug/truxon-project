@@ -52,6 +52,18 @@ service cloud.firestore {
       allow write: if hasRole(['transporter', 'vendor', 'driver', 'admin']);
     }
 
+    // Customer bookings: a signed-in customer creates bookings they own; the
+    // owner (or an admin) can read/update them. Admins can read every booking.
+    match /bookings/{bookingId} {
+      allow read: if isOps() &&
+        (resource.data.ownerUid == request.auth.uid || isAdmin());
+      allow create: if isOps() &&
+        request.resource.data.ownerUid == request.auth.uid;
+      allow update: if isOps() &&
+        (resource.data.ownerUid == request.auth.uid || isAdmin());
+      allow delete: if isAdmin();
+    }
+
     // Email OTP material is written/read only by the server (Admin SDK), which
     // bypasses these rules. Clients must never touch it.
     match /emailOtps/{docId} {
