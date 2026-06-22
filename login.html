@@ -20,6 +20,7 @@
 
       <div class="auth-tabs">
         <button class="auth-tab is-active" data-tab="otp" type="button">Email OTP</button>
+        <button class="auth-tab" data-tab="phone" type="button">Phone OTP</button>
         <button class="auth-tab" data-tab="password" type="button">Email &amp; Password</button>
       </div>
 
@@ -38,6 +39,21 @@
         <button id="otp-resend-btn" class="btn secondary" type="button" hidden>Resend code</button>
       </form>
 
+      <!-- Phone OTP -->
+      <form id="phone-form" class="auth-panel" data-panel="phone" hidden>
+        <label for="phone-number">Mobile number</label>
+        <input id="phone-number" type="tel" autocomplete="tel" inputmode="tel" placeholder="+91 98765 43210" required />
+
+        <div id="phone-code-group" hidden>
+          <label for="phone-code">6-digit code</label>
+          <input id="phone-code" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="123456" />
+        </div>
+
+        <button id="phone-send-btn" class="btn" type="submit">Send OTP</button>
+        <button id="phone-verify-btn" class="btn" type="button" hidden>Verify &amp; sign in</button>
+        <button id="phone-resend-btn" class="btn secondary" type="button" hidden>Resend code</button>
+      </form>
+
       <!-- Email + Password -->
       <form id="password-form" class="auth-panel" data-panel="password" hidden>
         <label for="pw-email">Email</label>
@@ -49,6 +65,8 @@
         <button id="pw-login-btn" class="btn" type="submit">Log in</button>
         <button id="pw-forgot-btn" class="link-btn" type="button">Forgot password?</button>
       </form>
+
+      <div id="recaptcha-container"></div>
 
       <div id="auth-status" class="login-status" role="status" aria-live="polite"></div>
 

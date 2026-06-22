@@ -3,6 +3,8 @@ import {
   signInWithGoogle,
   signInWithEmailPassword,
   resetPassword,
+  startPhoneSignIn,
+  confirmPhoneCode,
   onAuth,
   authErrorMessage,
 } from './auth.js';
@@ -118,6 +120,66 @@ otpVerifyBtn.addEventListener('click', async () => {
     setStatus(err.message || 'Verification failed.', 'error');
   } finally {
     otpVerifyBtn.disabled = false;
+  }
+});
+
+// --- Phone OTP ------------------------------------------------------------
+const phoneForm = document.getElementById('phone-form');
+const phoneNumber = document.getElementById('phone-number');
+const phoneCodeGroup = document.getElementById('phone-code-group');
+const phoneCode = document.getElementById('phone-code');
+const phoneSendBtn = document.getElementById('phone-send-btn');
+const phoneVerifyBtn = document.getElementById('phone-verify-btn');
+const phoneResendBtn = document.getElementById('phone-resend-btn');
+
+let phoneStage = 'request'; // 'request' | 'verify'
+let phoneConfirmation = null;
+
+async function sendPhoneCode() {
+  const phone = phoneNumber.value.trim();
+  if (!phone) return setStatus('Enter your phone number first.', 'error');
+  phoneSendBtn.disabled = true;
+  phoneResendBtn.disabled = true;
+  setStatus('Sending OTP…');
+  try {
+    phoneConfirmation = await startPhoneSignIn(phone);
+    phoneStage = 'verify';
+    phoneCodeGroup.hidden = false;
+    phoneSendBtn.hidden = true;
+    phoneVerifyBtn.hidden = false;
+    phoneResendBtn.hidden = false;
+    phoneNumber.readOnly = true;
+    phoneCode.focus();
+    setStatus('OTP sent. Enter the 6-digit code.', 'ok');
+  } catch (err) {
+    setStatus(authErrorMessage(err), 'error');
+  } finally {
+    phoneSendBtn.disabled = false;
+    phoneResendBtn.disabled = false;
+  }
+}
+
+phoneForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  if (phoneStage === 'request') sendPhoneCode();
+});
+
+phoneResendBtn.addEventListener('click', sendPhoneCode);
+
+phoneVerifyBtn.addEventListener('click', async () => {
+  const code = phoneCode.value.trim();
+  if (!/^\d{6}$/.test(code)) return setStatus('Enter the 6-digit code.', 'error');
+  if (!phoneConfirmation) return setStatus('Request an OTP first.', 'error');
+  phoneVerifyBtn.disabled = true;
+  setStatus('Verifying…');
+  try {
+    await confirmPhoneCode(phoneConfirmation, code);
+    setStatus('Signed in. Redirecting…', 'ok');
+    goNext();
+  } catch (err) {
+    setStatus(authErrorMessage(err), 'error');
+  } finally {
+    phoneVerifyBtn.disabled = false;
   }
 });
 

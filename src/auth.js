@@ -1,6 +1,6 @@
-// Production auth for Truxon: Google, Email OTP, and Email + Password.
-// No anonymous auth, no phone auth, no reCAPTCHA. Session persists across reloads
-// (browserLocalPersistence is set in firebase.js), giving auto-login + logout.
+// Production auth for Truxon: Google, Email OTP, Email + Password, and Phone OTP.
+// Session persists across reloads (browserLocalPersistence is set in firebase.js),
+// giving auto-login + logout. Phone OTP uses an invisible reCAPTCHA (v10 modular).
 
 import {
   GoogleAuthProvider,
@@ -13,6 +13,8 @@ import {
   onAuthStateChanged,
   updateProfile,
   signOut,
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
 } from 'firebase/auth';
 import {
   doc,
@@ -158,6 +160,56 @@ export async function signInWithEmailOtpToken(customToken) {
   return user;
 }
 
+// --- Phone OTP ------------------------------------------------------------
+// A single invisible reCAPTCHA verifier is created lazily and reused for the
+// life of the page. We never read auth.settings.appVerificationDisabledForTesting.
+let recaptchaVerifier = null;
+
+/**
+ * Get (creating once) the shared invisible RecaptchaVerifier.
+ * @param {string} [containerId] id of an element to host the widget
+ */
+export function getRecaptchaVerifier(containerId = 'recaptcha-container') {
+  const auth = requireAuth();
+  if (!recaptchaVerifier) {
+    recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
+      size: 'invisible',
+    });
+  }
+  return recaptchaVerifier;
+}
+
+/** Normalize an Indian phone number to E.164 (+91XXXXXXXXXX). */
+export function toE164(input) {
+  const raw = String(input || '').trim();
+  if (raw.startsWith('+')) return '+' + raw.slice(1).replace(/\D/g, '');
+  const digits = raw.replace(/\D/g, '').slice(-10);
+  return '+91' + digits;
+}
+
+/**
+ * Start phone sign-in: sends an SMS code. Returns the confirmationResult to
+ * pass to confirmPhoneCode().
+ * @param {string} phone user-entered phone number
+ * @param {string} [containerId]
+ */
+export async function startPhoneSignIn(phone, containerId = 'recaptcha-container') {
+  const auth = requireAuth();
+  const verifier = getRecaptchaVerifier(containerId);
+  return signInWithPhoneNumber(auth, toE164(phone), verifier);
+}
+
+/**
+ * Confirm the SMS code and finish sign-in. Creates the profile if missing.
+ * @param {import('firebase/auth').ConfirmationResult} confirmationResult
+ * @param {string} code 6-digit SMS code
+ */
+export async function confirmPhoneCode(confirmationResult, code) {
+  const { user } = await confirmationResult.confirm(code);
+  await ensureUserProfile(user);
+  return user;
+}
+
 /** Sign out the current user. */
 export async function logout() {
   const auth = requireAuth();
@@ -213,6 +265,11 @@ export function authErrorMessage(err) {
     'auth/too-many-requests': 'Too many attempts. Please try again later.',
     'auth/operation-not-allowed':
       'This sign-in method is not enabled in Firebase. Enable it in Authentication → Sign-in method.',
+    'auth/invalid-phone-number': 'That phone number is not valid.',
+    'auth/missing-phone-number': 'Enter your phone number first.',
+    'auth/invalid-verification-code': 'Incorrect code. Please try again.',
+    'auth/code-expired': 'The code expired. Request a new one.',
+    'auth/captcha-check-failed': 'reCAPTCHA failed. Reload the page and try again.',
   };
   return map[code] || err?.message || 'Something went wrong. Please try again.';
 }
