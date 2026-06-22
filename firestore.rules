@@ -1,0 +1,73 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function profile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    // Any signed-in user who has a profile document. exists() keeps the rule from
+    // crashing when the doc is missing — it just returns false.
+    function isOps() {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function hasRole(roles) {
+      return isOps() && profile().role in roles;
+    }
+
+    function isAdmin() {
+      return hasRole(['admin']);
+    }
+
+    // Roles a client may self-assign at signup (never 'admin').
+    function selfAssignableRole(role) {
+      return role in ['customer', 'transporter', 'vendor', 'driver'];
+    }
+
+    // Each user owns their own profile doc.
+    match /users/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+      // Self-create with a non-admin role only.
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.uid == uid
+        && selfAssignableRole(request.resource.data.role);
+      // Owner may update their profile but never change their own role
+      // (privilege changes happen out-of-band: Admin SDK / console).
+      allow update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.role == resource.data.role;
+      allow delete: if isAdmin();
+    }
+
+    // Live driver positions: any provisioned user can read the fleet; only
+    // transporter/vendor/driver/admin may write positions.
+    match /drivers/{driverId} {
+      allow read: if isOps();
+      allow write: if hasRole(['transporter', 'vendor', 'driver', 'admin']);
+    }
+
+    // Customer bookings: a signed-in customer creates bookings they own; the
+    // owner (or an admin) can read/update them. Admins can read every booking.
+    match /bookings/{bookingId} {
+      allow read: if isOps() &&
+        (resource.data.ownerUid == request.auth.uid || isAdmin());
+      allow create: if isOps() &&
+        request.resource.data.ownerUid == request.auth.uid;
+      allow update: if isOps() &&
+        (resource.data.ownerUid == request.auth.uid || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // Email OTP material is written/read only by the server (Admin SDK), which
+    // bypasses these rules. Clients must never touch it.
+    match /emailOtps/{docId} {
+      allow read, write: if false;
+    }
+  }
+}

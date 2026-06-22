@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><circle cx='8' cy='8' r='7' fill='%231f6feb'/></svg>" />
+    <title>Truxon · Create Booking</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body class="auth-body">
+    <main class="auth-card">
+      <div class="brand"><span class="logo">●</span> Truxon</div>
+      <h1 class="auth-title">Create booking</h1>
+
+      <form id="booking-form" class="auth-panel">
+        <label for="bk-customer">Customer name</label>
+        <input id="bk-customer" type="text" autocomplete="name" placeholder="Ankit Chauhan" required />
+
+        <label for="bk-mobile">Mobile</label>
+        <input id="bk-mobile" type="tel" autocomplete="tel" placeholder="+91 98765 43210" required />
+
+        <label for="bk-pickup">Pickup</label>
+        <input id="bk-pickup" type="text" placeholder="Pickup address / city" required />
+
+        <label for="bk-drop">Drop</label>
+        <input id="bk-drop" type="text" placeholder="Drop address / city" required />
+
+        <label for="bk-vehicle">Vehicle type</label>
+        <select id="bk-vehicle" required>
+          <option value="mini-truck">Mini truck</option>
+          <option value="open-truck">Open truck</option>
+          <option value="container">Container</option>
+          <option value="trailer">Trailer</option>
+          <option value="tanker">Tanker</option>
+        </select>
+
+        <label for="bk-material">Material type</label>
+        <input id="bk-material" type="text" placeholder="e.g. Cement, Steel, Furniture" required />
+
+        <label for="bk-weight">Weight (tons)</label>
+        <input id="bk-weight" type="number" min="0" step="0.1" placeholder="e.g. 12" required />
+
+        <button id="bk-submit" class="btn" type="submit">Create booking</button>
+      </form>
+
+      <div id="booking-status" class="login-status" role="status" aria-live="polite"></div>
+
+      <p class="auth-foot"><a href="/index.html">← Back to dashboard</a></p>
+    </main>
+    <script type="module" src="/src/booking.js"></script>
+  </body>
+</html>
