@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><circle cx='8' cy='8' r='7' fill='%231f6feb'/></svg>" />
+    <title>Truxon · Post a Load</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand"><span class="logo">●</span> Truxon</div>
+        <p class="subtitle">Post a load for transporters to bid on</p>
+        <div id="user-bar" class="user-bar" hidden>
+          <div class="user-meta">
+            <span id="user-name" class="user-name"></span>
+            <span id="user-role" class="user-role"></span>
+          </div>
+          <button id="logout-btn" class="link-btn" type="button">Log out</button>
+        </div>
+        <div class="nav-links"></div>
+        <div id="status" class="status" data-kind="info">Loading…</div>
+      </aside>
+
+      <main class="content">
+        <div class="content-head">
+          <h1 class="page-title">Post a load</h1>
+        </div>
+        <p class="page-sub">Transporters will see this in the marketplace and place bids.</p>
+
+        <form id="load-form" class="card">
+          <div class="field-grid">
+            <div>
+              <label for="pl-material">Material type</label>
+              <select id="pl-material" required></select>
+            </div>
+            <div>
+              <label for="pl-truck">Truck type</label>
+              <select id="pl-truck" required></select>
+            </div>
+
+            <div>
+              <label for="pl-weight">Weight (tons)</label>
+              <input id="pl-weight" type="number" min="0" step="0.1" placeholder="e.g. 12" required />
+            </div>
+            <div>
+              <label for="pl-quantity">Trucks needed</label>
+              <input id="pl-quantity" type="number" min="1" step="1" value="1" required />
+            </div>
+
+            <div class="full">
+              <label for="pl-description">Material description (optional)</label>
+              <input id="pl-description" type="text" placeholder="e.g. 50 bags of cement" />
+            </div>
+
+            <div>
+              <label for="pl-pickup-city">Pickup city</label>
+              <input id="pl-pickup-city" type="text" placeholder="e.g. Delhi" required />
+            </div>
+            <div>
+              <label for="pl-dropoff-city">Drop-off city</label>
+              <input id="pl-dropoff-city" type="text" placeholder="e.g. Mumbai" required />
+            </div>
+
+            <div class="full">
+              <label for="pl-pickup-address">Pickup address</label>
+              <input id="pl-pickup-address" type="text" placeholder="Full pickup address" required />
+            </div>
+            <div class="full">
+              <label for="pl-dropoff-address">Drop-off address</label>
+              <input id="pl-dropoff-address" type="text" placeholder="Full drop-off address" required />
+            </div>
+
+            <div>
+              <label for="pl-contact-name">Contact name</label>
+              <input id="pl-contact-name" type="text" autocomplete="name" required />
+            </div>
+            <div>
+              <label for="pl-contact-phone">Contact phone</label>
+              <input id="pl-contact-phone" type="tel" autocomplete="tel" placeholder="+91 98765 43210" required />
+            </div>
+
+            <div>
+              <label for="pl-price">Expected price (₹)</label>
+              <input id="pl-price" type="number" min="0" step="100" placeholder="e.g. 25000" required />
+            </div>
+            <div>
+              <label for="pl-date">Pickup date</label>
+              <input id="pl-date" type="date" required />
+            </div>
+
+            <div>
+              <label for="pl-window">Pickup time window</label>
+              <select id="pl-window" required>
+                <option value="flexible">Flexible</option>
+                <option value="morning">Morning</option>
+                <option value="afternoon">Afternoon</option>
+                <option value="evening">Evening</option>
+              </select>
+            </div>
+          </div>
+
+          <button id="pl-submit" class="btn" type="submit">Post load</button>
+        </form>
+
+        <div id="form-status" class="login-status" role="status" aria-live="polite"></div>
+      </main>
+    </div>
+    <script type="module" src="/src/postLoad.js"></script>
+  </body>
+</html>

@@ -15,6 +15,17 @@ behind a production auth system (Google, Email OTP, Email + Password).
   using either the browser's real GPS (`navigator.geolocation`) or a route simulation.
 - **Dashboard** (`/index.html`): subscribes with `onSnapshot` and renders each truck as a
   heading-aware marker that animates smoothly between updates; stale trucks fade out.
+- **Load marketplace & bidding** (`/loads.html`, `/post-load.html`): customers/vendors post
+  loads (material, truck type, route, weight, expected price); transporters/drivers browse
+  open loads and place bids; the load owner reviews live bids and accepts one (which books
+  the load and auto-rejects the rest). Ported from the TRUXON marketplace app.
+- **Wallet & UPI** (`/wallet.html`): per-user wallet with a direct-UPI top-up flow (no
+  payment gateway) — pick a UPI app, pay to the TRUXON VPA, and the balance is credited once
+  the payment is confirmed. Live balance + transaction history via `onSnapshot`.
+
+These marketplace features integrate into the existing site (same branding, styles and
+auth); they are reachable from the role-aware sidebar navigation. The homepage/dashboard,
+design and branding are unchanged.
 
 ## Auth methods
 
@@ -45,6 +56,34 @@ drivers/{driverId} = {
 emailOtps/{hash(email)} = {   // server-only (Admin SDK); clients are denied
   email, hash, salt, expiresAt, attempts, sendCount, windowStart, lastSentAt, createdAt
 }
+
+bookings/{id} = { ownerUid, customerName, mobile, pickup, drop, vehicleType, materialType, weight, status, createdAt }
+
+loads/{id} = {              // load marketplace
+  customerId, customerName, customerPhone,
+  materialType, materialDescription, weight, truckType, quantity,
+  pickup { city, address, contactName, contactPhone },
+  dropoff { city, address, contactName, contactPhone },
+  expectedPrice, finalPrice, status,   // pending | booked | in_transit | delivered | cancelled
+  bidCount, assignedTransporterId, pickupDate, pickupTimeWindow,
+  createdAt, updatedAt, expiresAt
+}
+
+bids/{id} = {
+  loadId, transporterId, transporterName, transporterPhone,
+  amount, message, vehicleNumber, driverName, driverPhone,
+  status,             // pending | accepted | rejected | expired
+  createdAt, expiresAt, respondedAt
+}
+
+wallets/{id} = { userId, balance, currency: "INR", status, createdAt, updatedAt }
+
+transactions/{id} = {
+  userId, type,       // credit | debit | refund | withdrawal
+  amount, currency, status,   // pending | completed | failed | cancelled
+  paymentMethod, upiApp, transactionId, description, loadId, balanceAfter,
+  createdAt, completedAt
+}
 ```
 
 ## Roles
@@ -70,10 +109,18 @@ In the Firebase console:
 3. **Rules** — publish [`firestore.rules`](./firestore.rules) (see below).
 
 Pages:
-- `/login.html` — sign in (Google / Email OTP / Email + Password)
+- `/login.html` — sign in (Google / Email OTP / Phone OTP / Email + Password)
 - `/signup.html` — create an account (name, email, phone, password, role)
-- `/index.html` — dashboard (protected)
+- `/index.html` — live tracking dashboard (protected)
 - `/driver.html` — driver broadcast (protected)
+- `/loads.html` — load marketplace & bidding (protected; role-aware)
+- `/post-load.html` — post a load (protected; customer/vendor)
+- `/wallet.html` — wallet & UPI top-up (protected)
+
+The marketplace/wallet collections need composite indexes the first time their queries run
+(loads by `customerId + createdAt`, bids by `loadId/transporterId + createdAt`, transactions
+by `userId + createdAt`). Firestore prints a one-click "create index" link in the browser
+console when a query first needs one.
 
 ## Email OTP backend (serverless)
 

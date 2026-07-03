@@ -1,8 +1,9 @@
 import { TruckMap } from './truckMap.js';
 import { subscribeToDrivers, isFirebaseConfigured } from './firebase.js';
 import { SimulatedTruck, DEMO_ROUTE } from './simulation.js';
-import { requireUser } from './auth.js';
+import { requireUser, getCurrentProfile } from './auth.js';
 import { mountUserBar } from './userBar.js';
+import { mountNav } from './nav.js';
 
 const statusEl = document.getElementById('status');
 const listEl = document.getElementById('driver-list');
@@ -79,6 +80,8 @@ async function init() {
   // Protected route: redirects to /login.html if not signed in.
   const user = await requireUser();
   await mountUserBar(user);
+  const profile = await getCurrentProfile();
+  mountNav(profile?.role, '/index.html');
   startLiveMode();
 }
 

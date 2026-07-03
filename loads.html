@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><circle cx='8' cy='8' r='7' fill='%231f6feb'/></svg>" />
+    <title>Truxon · Loads &amp; Bids</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand"><span class="logo">●</span> Truxon</div>
+        <p class="subtitle">Load marketplace &amp; bidding</p>
+        <div id="user-bar" class="user-bar" hidden>
+          <div class="user-meta">
+            <span id="user-name" class="user-name"></span>
+            <span id="user-role" class="user-role"></span>
+          </div>
+          <button id="logout-btn" class="link-btn" type="button">Log out</button>
+        </div>
+        <div class="nav-links"></div>
+        <div id="status" class="status" data-kind="info">Loading…</div>
+      </aside>
+
+      <main class="content">
+        <!-- Load poster (customer / vendor) view -->
+        <section id="poster-section" hidden>
+          <div class="content-head">
+            <h1 class="page-title">My loads</h1>
+            <a class="btn" style="width:auto;padding:8px 14px;font-size:13px;margin-top:0;text-decoration:none;display:inline-block" href="/post-load.html">+ Post a load</a>
+          </div>
+          <p class="page-sub">Review incoming bids and accept the best one.</p>
+          <div id="poster-stats" class="stat-grid"></div>
+          <div id="my-loads"></div>
+        </section>
+
+        <!-- Transporter / driver view -->
+        <section id="bidder-section" hidden>
+          <div class="content-head">
+            <h1 class="page-title">Available loads</h1>
+          </div>
+          <p class="page-sub">Browse open loads and place your bid.</p>
+          <div id="available-loads"></div>
+
+          <h2 class="section-title">My bids</h2>
+          <div id="my-bids"></div>
+        </section>
+      </main>
+    </div>
+    <script type="module" src="/src/loadsPage.js"></script>
+  </body>
+</html>
