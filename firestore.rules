@@ -64,6 +64,63 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // Load marketplace: any provisioned user can browse open loads; only
+    // customers/vendors/admins may post loads they own. The owner (or an admin)
+    // can update/delete; any bidder may only bump bidCount/updatedAt when bidding.
+    match /loads/{loadId} {
+      allow read: if isOps();
+      allow create: if hasRole(['customer', 'vendor', 'admin'])
+        && request.resource.data.customerId == request.auth.uid;
+      allow update: if isOps() && (
+        resource.data.customerId == request.auth.uid || isAdmin()
+        || request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['bidCount', 'updatedAt'])
+      );
+      allow delete: if isAdmin();
+    }
+
+    // Bids: transporters/drivers create bids they own. The bidder, the owner of
+    // the target load, or an admin can read; the load owner / admin update
+    // (accept/reject) bids.
+    match /bids/{bidId} {
+      allow read: if isOps() && (
+        resource.data.transporterId == request.auth.uid
+        || get(/databases/$(database)/documents/loads/$(resource.data.loadId)).data.customerId == request.auth.uid
+        || isAdmin()
+      );
+      allow create: if hasRole(['transporter', 'driver', 'admin'])
+        && request.resource.data.transporterId == request.auth.uid;
+      allow update: if isOps() && (
+        get(/databases/$(database)/documents/loads/$(resource.data.loadId)).data.customerId == request.auth.uid
+        || isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+    // Wallets: each user owns their wallet; admins may adjust the balance when
+    // confirming a UPI top-up.
+    match /wallets/{walletId} {
+      allow read: if isOps() &&
+        (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isOps() &&
+        request.resource.data.userId == request.auth.uid;
+      allow update: if isOps() &&
+        (resource.data.userId == request.auth.uid || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // Transactions: the owner creates + reads their own; owner/admin may update
+    // (mark completed/failed on confirmation).
+    match /transactions/{txnId} {
+      allow read: if isOps() &&
+        (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isOps() &&
+        request.resource.data.userId == request.auth.uid;
+      allow update: if isOps() &&
+        (resource.data.userId == request.auth.uid || isAdmin());
+      allow delete: if isAdmin();
+    }
+
     // Email OTP material is written/read only by the server (Admin SDK), which
     // bypasses these rules. Clients must never touch it.
     match /emailOtps/{docId} {

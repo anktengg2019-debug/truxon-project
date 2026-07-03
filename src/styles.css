@@ -356,3 +356,235 @@ form select {
   transition: transform 0.5s linear;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
 }
+
+/* ---------------------------------------------------------------------------
+   Marketplace features (loads / bidding / wallet) — reuses the Truxon theme.
+   --------------------------------------------------------------------------- */
+main.content {
+  height: 100vh;
+  overflow-y: auto;
+  padding: 28px 32px;
+}
+.content-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+.page-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+}
+.page-sub {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 0 0 20px;
+}
+.section-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 26px 0 12px;
+}
+
+/* Stat tiles */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.stat {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+.stat .stat-value {
+  font-size: 22px;
+  font-weight: 700;
+}
+.stat .stat-label {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+/* Cards */
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin-bottom: 12px;
+}
+.card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.card-route {
+  font-size: 15px;
+  font-weight: 600;
+}
+.card-meta {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+}
+.card-actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.card-actions .btn {
+  margin-top: 0;
+  width: auto;
+  padding: 8px 14px;
+  font-size: 13px;
+}
+.price {
+  font-size: 18px;
+  font-weight: 700;
+  color: #7ee787;
+  white-space: nowrap;
+}
+
+/* Status badges */
+.badge {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: capitalize;
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+.badge[data-status='pending'] { border-color: var(--warn); color: #e3b341; }
+.badge[data-status='booked'],
+.badge[data-status='accepted'],
+.badge[data-status='completed'] { border-color: var(--ok); color: #7ee787; }
+.badge[data-status='in_transit'] { border-color: var(--accent); color: #79c0ff; }
+.badge[data-status='cancelled'],
+.badge[data-status='rejected'],
+.badge[data-status='failed'] { border-color: var(--error); color: #ff7b72; }
+
+.empty-state {
+  color: var(--muted);
+  font-size: 14px;
+  padding: 18px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  text-align: center;
+}
+
+/* Nested bid list under a load */
+.bid-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-top: 8px;
+  font-size: 13px;
+}
+.bid-line .bid-who { flex: 1; min-width: 0; }
+.bid-line .btn { margin-top: 0; width: auto; padding: 6px 12px; font-size: 12px; }
+
+/* Wallet */
+.wallet-balance {
+  background: linear-gradient(135deg, #10233f, #161b22);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 22px 24px;
+  margin-bottom: 18px;
+}
+.wallet-balance .wallet-amount {
+  font-size: 34px;
+  font-weight: 800;
+}
+.wallet-balance .wallet-label {
+  color: var(--muted);
+  font-size: 13px;
+}
+.upi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+.upi-app {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #0d1117;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text);
+}
+.upi-app:hover { border-color: var(--accent); }
+.upi-app.is-active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.upi-app .upi-icon { font-size: 18px; }
+
+.txn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+.txn .txn-desc { font-size: 13px; }
+.txn .txn-date { color: var(--muted); font-size: 12px; margin-top: 2px; }
+.txn .txn-amount { font-weight: 700; white-space: nowrap; }
+.txn .txn-amount.credit { color: #7ee787; }
+.txn .txn-amount.debit { color: #ff7b72; }
+
+/* Two-column form grid for wider pages */
+.field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 16px;
+}
+.field-grid .full { grid-column: 1 / -1; }
+
+@media (max-width: 720px) {
+  .app { grid-template-columns: 1fr; }
+  .field-grid { grid-template-columns: 1fr; }
+}
+
+/* Role-aware sidebar nav (additive) */
+.nav-links {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 4px 0 14px;
+}
+.nav-links a.nav-link {
+  display: block;
+  padding: 8px 10px;
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 13px;
+  text-decoration: none;
+}
+.nav-links a.nav-link:hover { background: #0d1117; }
+.nav-links a.nav-link.is-active {
+  background: #0d1117;
+  color: var(--accent);
+  font-weight: 600;
+}

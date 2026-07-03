@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><circle cx='8' cy='8' r='7' fill='%231f6feb'/></svg>" />
+    <title>Truxon · Wallet</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand"><span class="logo">●</span> Truxon</div>
+        <p class="subtitle">Wallet &amp; UPI payments</p>
+        <div id="user-bar" class="user-bar" hidden>
+          <div class="user-meta">
+            <span id="user-name" class="user-name"></span>
+            <span id="user-role" class="user-role"></span>
+          </div>
+          <button id="logout-btn" class="link-btn" type="button">Log out</button>
+        </div>
+        <div class="nav-links"></div>
+        <div id="status" class="status" data-kind="info">Loading…</div>
+      </aside>
+
+      <main class="content">
+        <div class="content-head">
+          <h1 class="page-title">Wallet</h1>
+        </div>
+        <p class="page-sub">Add money via any UPI app — no gateway fees.</p>
+
+        <div class="wallet-balance">
+          <div class="wallet-label">Available balance</div>
+          <div class="wallet-amount" id="wallet-amount">₹0</div>
+        </div>
+
+        <div class="card">
+          <h2 class="section-title" style="margin-top:0">Add money</h2>
+          <label for="add-amount">Amount (₹)</label>
+          <input id="add-amount" type="number" min="1" step="100" placeholder="e.g. 5000" />
+
+          <label style="margin-top:14px">Pay using</label>
+          <div class="upi-grid" id="upi-grid"></div>
+
+          <button id="add-btn" class="btn" type="button">Pay &amp; add money</button>
+          <div id="add-status" class="login-status" role="status" aria-live="polite"></div>
+        </div>
+
+        <h2 class="section-title">Transactions</h2>
+        <div id="txn-list"></div>
+      </main>
+    </div>
+    <script type="module" src="/src/walletPage.js"></script>
+  </body>
+</html>

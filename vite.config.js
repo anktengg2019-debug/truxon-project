@@ -12,6 +12,9 @@ export default defineConfig({
         login: resolve(__dirname, 'login.html'),
         signup: resolve(__dirname, 'signup.html'),
         booking: resolve(__dirname, 'booking.html'),
+        loads: resolve(__dirname, 'loads.html'),
+        postLoad: resolve(__dirname, 'post-load.html'),
+        wallet: resolve(__dirname, 'wallet.html'),
       },
       output: {
         manualChunks: {

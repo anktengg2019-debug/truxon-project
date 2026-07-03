@@ -1,8 +1,9 @@
 import { publishDriverPosition, isFirebaseConfigured } from './firebase.js';
 import { TruckMap } from './truckMap.js';
 import { SimulatedTruck, DEMO_ROUTE, bearing } from './simulation.js';
-import { requireUser } from './auth.js';
+import { requireUser, getCurrentProfile } from './auth.js';
 import { mountUserBar } from './userBar.js';
+import { mountNav } from './nav.js';
 
 const PUBLISH_INTERVAL_MS = 5000;
 
@@ -143,6 +144,8 @@ async function init() {
   // Protected route: redirects to /login.html if not signed in.
   const user = await requireUser();
   await mountUserBar(user);
+  const profile = await getCurrentProfile();
+  mountNav(profile?.role, '/driver.html');
 }
 
 init();
